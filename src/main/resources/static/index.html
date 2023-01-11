@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>导入导出</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.10/dist/vue.js"></script>
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+</head>
+<body>
+<div id="app">
+
+        <el-row>
+            <el-col :span="1.5">
+                <el-button
+                        type="info"
+                        plain
+                        @click="handleImport"
+                >导入</el-button>
+            </el-col>
+
+            <el-col :span="1.5">
+                <el-button
+                        type="warning"
+                        plain
+                        @click="handleExport"
+                >导出</el-button>
+            </el-col>
+        </el-row>
+
+        <el-table :data="channelList" style="width: 100%">
+            <el-table-column label="渠道编号" prop="channelId"></el-table-column>
+            <el-table-column label="渠道名称" prop="channelName"></el-table-column>
+            <el-table-column label="渠道类型" prop="type" width="100">
+                <template  slot-scope="scope">
+                    <el-tag v-if="0 == scope.row.status" type="success">禁用</el-tag>
+                    <el-tag v-else="1 == scope.row.status" type="info">正常</el-tag>
+                </template>
+            </el-table-column>
+
+                <el-table-column label="渠道类型" prop="type" width="100">
+                    <template  slot-scope="scope">
+                        <el-tag v-if="1 == scope.row.type" type="success">线上渠道</el-tag>
+                        <el-tag v-else="2 == scope.row.type" type="success">线下渠道</el-tag>
+                    </template>
+                </el-table-column>
+        </el-table>
+
+        <!-- 渠道导入对话框 -->
+        <el-dialog title="上传" :visible.sync="upload.open" width="400px" append-to-body>
+            <el-upload
+                    ref="upload"
+                    :limit="1"
+                    accept=".xlsx, .xls"
+                    :action="upload.url + '?updateSupport=' + upload.updateSupport"
+                    :disabled="upload.isUploading"
+                    :on-progress="handleFileUploadProgress"
+                    :on-success="handleFileSuccess"
+                    :auto-upload="false"
+            >
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                <div class="el-upload__tip text-center" slot="tip">
+                    <div class="el-upload__tip" slot="tip">
+                        <el-checkbox v-model="upload.updateSupport" /> 是否更新已经存在的用户数据
+                    </div>
+                    <span>仅允许导入xls、xlsx格式文件。</span>
+                    <el-link type="primary" :underline="false" style="font-size:12px;vertical-align: baseline;" @click="importTemplate">下载模板</el-link>
+                </div>
+            </el-upload>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="submitFileForm">确 定</el-button>
+                <el-button @click="upload.open = false">取 消</el-button>
+            </div>
+        </el-dialog>
+
+</div>
+
+<script>
+    // import Crontab from 'Crontab/index.vue'
+
+    new Vue({
+        el:'#app',
+        data(){
+            return {
+                // 用户导入参数
+                upload: {
+                    // 是否显示弹出层（用户导入）
+                    open: false,
+                    // 弹出层标题（用户导入）
+                    title: "",
+                    // 是否禁用上传
+                    isUploading: false,
+                    // 是否更新已经存在的用户数据
+                    updateSupport: 0,
+                    // 上传的地址
+                    url: "/importData"
+                },
+                channelList:[]
+            }
+        },
+        created(){
+            this.getList()
+        },
+        methods:{
+            /** 导入按钮操作 */
+            handleImport() {
+                this.upload.open = true;
+            },
+            /** 下载模板操作 */
+            importTemplate() {
+                this.download('/importTemplate', {
+                }, `channel_template_${new Date().getTime()}.xlsx`)
+            },
+            /** 导出按钮操作 */
+            handleExport() {
+                this.download('/export', {
+
+                }, `user_${new Date().getTime()}.xlsx`)
+            },
+            // 文件上传中处理
+            handleFileUploadProgress(event, file, fileList) {
+                this.upload.isUploading = true;
+            },
+            // 文件上传成功处理
+            handleFileSuccess(response, file, fileList) {
+                this.upload.open = false;
+                this.upload.isUploading = false;
+                this.$refs.upload.clearFiles();
+                this.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "导入结果", { dangerouslyUseHTMLString: true });
+                this.getList();
+            },
+            // 提交上传文件
+            submitFileForm() {
+                this.$refs.upload.submit();
+            },
+
+            getList() {
+                axios.get('/channelList').then((res) => {
+                    this.channelList = res.data;
+                })
+            },
+
+            // 通用下载方法
+            download(url, params, filename) {
+                 axios.post(url, params, {
+                    // 对参数进行处理，将参数转成乱码
+                    transformRequest: [(params) => { return this.tansParams(params) }],
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    responseType: 'blob'
+                }).then((res) => {
+                     if(res.status === 200){
+                         const content = res.data;
+                         console.log(content)
+                         const blob = new Blob([content]);
+                         if('download' in document.createElement('a')){
+                             //非IE下载
+                             const a = document.createElement('a');
+                             a.download = filename;
+                             a.style.display = 'none';
+                             a.href = window.URL.createObjectURL(blob);
+                             document.body.appendChild(a);
+                             a.click();
+                             window.URL.revokeObjectURL(a.href);
+                             document.body.removeChild(a);
+                         }else{
+                             //IE10+下载
+                             if(typeof window.navigator.msSaveBlob !== 'undefined'){
+                                 window.navigator.msSaveBlob(blob, _this.selected);
+                             }else{
+                                 let URL = window.URL || window.webkitURL;
+                                 let downloadUrl = URL.createObjectURL(blob);
+                                 window.location = downloadUrl;
+                             }
+                         }
+                     }
+                    // downloadLoadingInstance.close();
+                }).catch((r) => {
+                    console.error(r)
+                    // ElMessage.error('下载文件出现错误，请联系管理员！')
+                    // downloadLoadingInstance.close();
+                })
+            },
+
+            tansParams(params) {
+                let result = ''
+                for (const propName of Object.keys(params)) {
+                    const value = params[propName];
+                    var part = encodeURIComponent(propName) + "=";
+                    if (value !== null && value !== "" && typeof (value) !== "undefined") {
+                        if (typeof value === 'object') {
+                            for (const key of Object.keys(value)) {
+                                if (value[key] !== null && value[key] !== "" && typeof (value[key]) !== 'undefined') {
+                                    let params = propName + '[' + key + ']';
+                                    var subPart = encodeURIComponent(params) + "=";
+                                    result += subPart + encodeURIComponent(value[key]) + "&";
+                                }
+                            }
+                        } else {
+                            result += part + encodeURIComponent(value) + "&";
+                        }
+                    }
+                }
+                return result
+            }
+        }
+
+    })
+</script>
+</body>
+</html>
