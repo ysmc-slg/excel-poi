@@ -1,6 +1,9 @@
 package top.zxqs.dao;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.validation.constraints.*;
+import java.util.Date;
 import java.util.StringJoiner;
 
 public class TienchinChannel{
@@ -27,6 +30,8 @@ public class TienchinChannel{
     @Min(value = 0,message = "渠道状态最小为0")
     private String status;
 
+    @Excel(name = "图片",cellType = Excel.ColumnType.IMAGE)
+    private String image;
     /**
      * 渠道类型 1线上渠道，2线下渠道
      */
@@ -36,8 +41,9 @@ public class TienchinChannel{
     @Min(value = 1,message = "渠道类型最小为1")
     private Integer type;
 
-    @Excel(name = "图片",cellType = Excel.ColumnType.IMAGE)
-    private String image;
+    @Excel(name = "创建时间",dateFormat = "yyyy/MM/dd",type= Excel.Type.EXPORT)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:ss:mm")
+    private Date createTime;
 
     public String getImage() {
         return image;
@@ -45,6 +51,18 @@ public class TienchinChannel{
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 
     /**

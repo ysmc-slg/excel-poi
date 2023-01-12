@@ -4,6 +4,7 @@ import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import top.zxqs.config.ExcelConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -20,8 +21,6 @@ import java.util.Arrays;
 public class ImageUtils {
     private static final Logger log = LoggerFactory.getLogger(ImageUtils.class);
 
-    @Value("${demo.profile}")
-    private static String profile;
 
     public static byte[] getImage(String imagePath) {
         InputStream is = getFile(imagePath);
@@ -65,7 +64,7 @@ public class ImageUtils {
                 in = urlConnection.getInputStream();
             } else {
                 // 文件存放地址，本地地址
-                String localPath = profile;
+                String localPath = ExcelConfig.getProfile();
                 // 文件下载地址
                 String downloadPath = localPath + StringUtils.substringAfter(url, "/profile");
                 in = new FileInputStream(downloadPath);

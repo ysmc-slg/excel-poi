@@ -9,7 +9,7 @@ public class ResourcesConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        /** 本地文件上传路径 */
+        /** 映射到本地目录 */
         registry.addResourceHandler("/profile" + "/**")
                 .addResourceLocations("file:" + ExcelConfig.getProfile() + "/");
 

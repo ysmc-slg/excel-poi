@@ -17,15 +17,6 @@ public class ExcelConfig {
     private static String profile;
 
     /**
-     * 获取地址开关
-     */
-    private static boolean addressEnabled;
-
-    /**
-     * 验证码类型
-     */
-    private static String captchaType;
-    /**
      * 获取导入上传路径
      */
     public static String getImportPath() {
@@ -52,19 +43,7 @@ public class ExcelConfig {
         ExcelConfig.profile = profile;
     }
 
-    public static boolean isAddressEnabled() {
-        return addressEnabled;
-    }
 
-    public void setAddressEnabled(boolean addressEnabled) {
-        ExcelConfig.addressEnabled = addressEnabled;
-    }
 
-    public static String getCaptchaType() {
-        return captchaType;
-    }
 
-    public void setCaptchaType(String captchaType) {
-        ExcelConfig.captchaType = captchaType;
-    }
 }

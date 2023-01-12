@@ -3,7 +3,7 @@ package top.zxqs.exception;
 /**
  * 文件名大小限制异常类
  *
- * @author ruoyi
+ * @author ysmc
  */
 public class FileSizeLimitExceededException extends RuntimeException {
     private static final long serialVersionUID = 1L;
